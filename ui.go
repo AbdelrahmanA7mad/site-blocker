@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func runTerminalUI() {
@@ -13,7 +14,7 @@ func runTerminalUI() {
 
 	for {
 		printMenu()
-		fmt.Print("\nEnter your choice (1-5): ")
+		fmt.Print("\nEnter your choice (1-9): ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			continue
@@ -25,18 +26,41 @@ func runTerminalUI() {
 
 		switch input {
 		case "1":
-			listBlockedSitesUI()
+			enableSystemProxy()
+			fmt.Println("\n\033[32;1m>>> Focus Proxy has been STARTED! <<<\033[0m")
 		case "2":
-			addBlockedSiteUI(reader)
+			disableSystemProxy()
+			fmt.Println("\n\033[31;1m>>> Focus Proxy has been STOPPED! <<<\033[0m")
 		case "3":
-			removeBlockedSiteUI(reader)
+			listBlockedSitesUI()
 		case "4":
-			reloadConfigUI()
+			addBlockedSiteUI(reader)
 		case "5":
+			removeBlockedSiteUI(reader)
+		case "6":
+			reloadConfigUI()
+		case "7":
+			fmt.Println("\n\033[33;1m>>> Closing this window and running in background... <<<\033[0m")
+			fmt.Println("Focus Proxy will continue running silently in the background.")
+			fmt.Println("To restore this window at any time, simply run sitesblocker.exe again!")
+			time.Sleep(2500 * time.Millisecond)
+
+			err := spawnBackgroundClone(isProxyActive())
+			if err != nil {
+				fmt.Printf("\nError running in background: %v\n", err)
+				fmt.Print("Press Enter to continue...")
+				_, _ = reader.ReadString('\n')
+				continue
+			}
+			os.Exit(0)
+		case "8":
+			resetSystemProxy()
+			fmt.Println("\n\033[33;1m>>> Windows System Proxy has been fully RESET to defaults! <<<\033[0m")
+		case "9":
 			fmt.Println("\nExiting and cleaning up system proxy settings...")
 			return
 		default:
-			fmt.Println("\nInvalid choice! Please enter a number between 1 and 5.")
+			fmt.Println("\nInvalid choice! Please enter a number between 1 and 9.")
 		}
 
 		fmt.Print("\nPress Enter to continue...")
@@ -50,15 +74,24 @@ func printMenu() {
 	fmt.Println("==========================================================")
 	fmt.Println("   🚫  FOCUS PROXY - INTERACTIVE TERMINAL CONTROL  🚫   ")
 	fmt.Println("==========================================================")
-	fmt.Printf("  Status      : System Proxy [ENABLED]\n")
+	
+	statusStr := "\033[31;1m[DISABLED]\033[0m"
+	if isProxyActive() {
+		statusStr = "\033[32;1m[ENABLED]\033[0m"
+	}
+	fmt.Printf("  Status      : System Proxy %s\n", statusStr)
 	fmt.Printf("  Proxy Addr  : %s\n", proxyAddr)
 	fmt.Printf("  Config File : %s (%d sites loaded)\n", hostsFilePath, len(listBlockedHosts()))
 	fmt.Println("==========================================================")
-	fmt.Println("  [1] List currently blocked sites")
-	fmt.Println("  [2] Add a new website to block list")
-	fmt.Println("  [3] Remove a website from block list (interactive)")
-	fmt.Println("  [4] Reload configuration from JSON file")
-	fmt.Println("  [5] Quit & Disable system proxy")
+	fmt.Println("  [1] Start Focus Proxy")
+	fmt.Println("  [2] Stop Focus Proxy")
+	fmt.Println("  [3] List currently blocked sites")
+	fmt.Println("  [4] Add a new website to block list")
+	fmt.Println("  [5] Remove a website from block list (interactive)")
+	fmt.Println("  [6] Reload configuration from JSON file")
+	fmt.Println("  [7] Hide terminal and run in background")
+	fmt.Println("  [8] Reset system proxy settings to Windows defaults")
+	fmt.Println("  [9] Quit & Disable system proxy")
 	fmt.Println("==========================================================")
 }
 

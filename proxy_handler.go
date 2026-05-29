@@ -5,9 +5,21 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 )
 
 func handleProxyRequest(w http.ResponseWriter, r *http.Request) {
+	// Intercept local restore requests from a new instance
+	if (r.Host == "127.0.0.1:8080" || r.Host == "localhost:8080") && r.URL.Path == "/restore" {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("Restoring control to new terminal instance..."))
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			close(shutdownChan)
+		}()
+		return
+	}
+
 	host := cleanHost(r.Host)
 
 	if isBlocked(host) {
