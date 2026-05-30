@@ -20,6 +20,7 @@ var defaultBlockedHosts = []string{
 	"tiktok.com",
 	"x.com",
 	"twitter.com",
+	"whatsapp.com",
 }
 
 var (
