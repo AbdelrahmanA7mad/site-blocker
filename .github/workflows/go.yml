@@ -1,4 +1,4 @@
-name: Release App
+name: Build Windows Release
 
 on:
   push:
@@ -9,19 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - goos: windows
-            goarch: amd64
-            ext: .exe
-
-          - goos: linux
-            goarch: amd64
-            ext: ""
+  build:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -30,19 +19,17 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.26.1'
 
-      - name: Download dependencies
+      - name: Install dependencies
         run: go mod tidy
 
-      - name: Build app
+      - name: Build EXE
         run: |
           mkdir dist
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -ldflags="-s -w" \
-          -o dist/site-blocker-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          go build -ldflags="-s -w" -o dist/site-blocker.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: dist/site-blocker.exe
